@@ -1,0 +1,36 @@
+<!DOCTYPE HTML>
+<html>
+    <head>
+        <meta charset="UTF-8">
+        <title>Task002</title>
+        <script type="text/javascript">
+            function add(num1, num2) {
+                    return num1 + num2;
+                }
+                function renderResult(result) {
+                    document.getElementById("result").innerHTML = result;
+                }
+                function addEventHandle() {
+                    var num1 = parseFloat(document.getElementById("number1").value);
+                    var num2 = parseFloat(document.getElementById("number2").value);
+                    var result = add(num1, num2);
+                    renderResult(result);
+                }
+                function initEvent() {
+                    document.getElementById("addbtn").addEventListener("click", addEventHandle, false);
+                }
+                
+                window.onload = function () {
+                    initEvent();
+                }
+
+                // initEvent();
+        </script>
+    </head>
+    <body>
+        <input id="number1" type="text">
+        <input id="number2" type="text">
+        <span id="result"></span>
+        <button id="addbtn" >Add</button>
+    </body>
+</html>
