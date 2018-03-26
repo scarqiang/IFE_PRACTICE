@@ -179,3 +179,52 @@ function isMobilePhone(phone) {
     phone = phone + '';
     return phone.search(/^(13[0-9]|15[012356789]|17[678]|18[0-9]|14[57])[0-9]{8}$/) !== -1;
 }
+
+//task 3.1
+function hasClass(element, className) {
+    var name = element.className.match(/\S+/g) || [];
+    if (name.indexOf(className) !== -1) {
+        return true;
+    }
+    return false;
+}
+
+// 为element增加一个样式名为newClassName的新样式
+function addClass(element, newClassName) {
+    if (!hasClass(element, newClassName)) {
+        element.className = trim(element.className + ' ' + newClassName);
+    }
+}
+
+// 移除element中的样式oldClassName
+function removeClass(element, oldClassName) {
+    // your implement
+    if (hasClass(element, oldClassName)) {
+        element.className = trim(element.className.replace(oldClassName, ''));
+    }
+}
+
+// 判断siblingNode和element是否为同一个父元素下的同一级的元素，返回bool值
+function  isSiblingNode(element, siblingNode) {
+    return element.parentNode === siblingNode.parentNode;
+}
+
+// 获取element相对于浏览器窗口的位置，返回一个对象{x, y}
+function getPosition(element) {
+    var x = 0;
+    var y = 0;
+    while (element != null) {
+        x += element.offsetLeft;
+        y += element.offsetTop;
+        element = element.offsetParent;
+    }
+    var scrollLeft = document.body.scrollLeft + document.documentElemen.scrollLeft;
+    var scrollTop = document.body.scrollTop + document.documentElement.scrollTop;
+    //element.getBoundingClienRect()
+    x -= scrollLeft;
+    y -= scrollTop;
+    return {
+        x: x,
+        y: y
+    }
+}
