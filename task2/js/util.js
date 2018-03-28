@@ -464,13 +464,14 @@ function ajax(url, options) {
     }
 
     //处理data
+    var data = '';
     if (options.data) {
         var dataarr = [];
         for (const item in options.data) {
             if (options.data.hasOwnProperty(item)) {
                 dataarr.push(item + '=' + encodeURI(options.data[item]));            
             }
-            var data = dataarr.join('&');
+            data = dataarr.join('&');
         }
     }
 
