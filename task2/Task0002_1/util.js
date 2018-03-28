@@ -228,3 +228,306 @@ function getPosition(element) {
         y: y
     }
 }
+
+
+/*//利用getBoundingClientRect()
+function getPosition(element) {
+    var pos = {};
+    pos.x = element.getBoundingClientRect().left + Math.max(document.documentElement.scrollLeft, document.body.scrollLeft);
+    pos.y = element.getBoundingClientRect().top + Math.max(document.documentElement.scrollTop, document.body.scrollTop);
+    return pos;
+}*/
+
+/*//实例测试
+var pos=document.getElementById('pos');
+console.log(getPosition(pos));*/
+
+//task 3.2
+// 实现一个简单的Query
+function domQuery(selector, root) {
+    var text;
+    var element;
+    //if root is not defined, root = document
+    if (!root) {
+        root = document;
+    }
+    if (selector.charAt(0) === "#") {
+        text = selector.replace(/^\#/,"");
+        element = root.getElementById(text);
+    }
+    else if (selector.charAt(0) === ".") {
+        text = selector.replace(/^\./,"");
+        elements = root.getElementByClassName(text);
+    }
+    else if ((selector.charAt(0) === "[")&&(selector.charAt(selector.length - 1) === "]")) {
+            //get all the elements
+            var eles = root.getElementByTagName("*");
+            //delete "[" and "]"
+            selector = selector.replace(/^\[/,"");
+            selector = selector.replace(/\]$/,"");
+
+            var texts = selector.split("=");
+            var attr = texts[0];
+            var value = texts[1];
+            if (value) {//没有属性值
+                for (let i = 0; i < eles.length; i++) {
+                    const item = eles[i];
+
+                    if (item.hasAttribute(attr)) {
+                        if (item.getAttribute(attr) === value) {
+                            element = eles[i];
+                            break;
+                        }
+                    }
+
+                }
+            } 
+            else {
+                for (let i = 0; i < eles.length; i++) {
+                    const item = eles[i];
+                    if (item.hasAttribute(attr)) {
+                        element = eles[i];
+                        break;
+                    }
+                }
+            }
+    }
+    else {
+        var items = root.getElementByTagName(selector);
+        element = items[0];
+    }
+    return element;
+}
+
+function $(selector) {
+    //multiple queries
+    var result = [];
+    var parents = [];
+    if (selector.indexOf(" ") !== -1) {
+        //split selector by space
+        var selectors = selector.split(" ");
+        parents = domQuery(selectors[0]);
+        for (var i = 1, length1 = selectors.length; i < length1; i++) {
+            if (parents.length) {
+                parents = domQuery(selectors[i], parents[0]);
+            } else {
+                parents = domQuery(selectors[i], parents);
+            }
+        }
+        result = parents;
+    }
+    //single query
+    else {
+        var result = domQuery(selector, document);
+    }
+    if (result.length) {
+        return result[0];
+    } else {
+        return result;
+    }
+}
+
+// task 4.1
+//给一个element绑定一个针对event事件的响应，响应函数为listener
+function addEvent(element, event, listener) {
+    if (element.addEventListener) {
+        element.addEventListener(event, listener, false);
+    }
+    else {
+        element.attachEvent('on'+event,function() {
+            listener.call(element);//why?
+        })
+    }
+}
+
+//移除element对象对于event事件发生时执行listener的响应
+function  removeEvent(element, event, listener) {
+    if (element.removeEventListener) {
+        element.removeEventListener(event, listener, false);
+    }
+    else if(element.detachEvent) {
+        element.datachEvent('on'+event, function () {
+            listener.call(element);
+        })
+    }
+    else {
+        element["on"+event] = null;
+    }
+}
+
+// 实现对click事件的绑定
+function addClickEvent(element, listener) {
+    addEvent(element, "click", listener);
+}
+
+// 实现对于按Enter键时的事件绑定
+function  addEnterEvent(element, listener) {
+    addEvent(element, "keydown", function (e) {
+        if (e.keyCode == 13) {
+            listener.call(element,e);
+        }
+    })
+}
+
+//task 4.2 
+//对一个列表里所有<li>增加时间监听
+function clickListener(event) {
+    console.log(event);
+}
+
+/*
+$.click($("#item1"), clickListener);
+$.click($("#item2"), clickListener);
+$.click($("#item3"), clickListener);
+*/
+
+
+//取到id为list这个ul里面的所有li，然后通过遍历给他们绑定事件。这样我们就不需要一个一个去绑定了
+function  renderList() {
+    $("list").innerHTML ='<li>new item</li>';
+}
+
+function init() {
+    each($("#list").getElementByTagName('li'),function (item) {
+        $.click(item, clickListener);
+    })
+    $.clidk($("%btn"), renderList);
+}
+
+// init();
+// 我们增加了一个按钮，当点击按钮时，改变list里面的项目，这个时候你再点击一下li，绑定事件不再生效了
+// 那是不是我们每次改变了DOM结构或者内容后，都需要重新绑定事件呢？
+//当然不会这么笨，接下来学习一下事件代理，然后实现下面新的方法。
+//事件代理
+function delegateEvent(elemet,tag,eventName,listener) {
+    addEvent(element,eventName, function (e) {
+        var event = e || window.event;
+        var target = event.target || event.srcElement;
+        if (target&&target.tagName ===tag.toUperCase) {
+            listener.call(target, event);
+        }
+    });
+}
+
+$.delegate = delegateEvent;
+
+
+// 时间代理使用示例，利用父元素
+// 还是上面那段HTML，实现对list这个ul里面所有li的click事件进行响应
+// $.delegate($("#list"), "li", "click", clickListener);
+
+
+//task 5.1
+// 判断是否为IE浏览器，返回-1或者版本号
+//'msie'无法识别ie11,改用'trident'
+// "Mozilla/5.0 (Windows NT 10.0; WOW64; Trident/7.0; .NET4.0C; .NET4.0E; .NET CLR 2.0.50727; .NET CLR 3.0.30729; .NET CLR 3.5.30729; rv:11.0) like Gecko"
+function isIE() {
+    var ua=window.navigator.userAgent;
+    if (ua.toLowerCase().indexOf('trident')===-1) {
+        return -1;
+    }
+    else {
+        return ua;
+    }
+}
+
+// 设置cookie
+function setCookie(cookieName, cookieValue, expiredays) {
+    // your implement
+    var oDate = new Date();
+    oDate.setDate(oDate.getDate()+expiredays);
+    document.cookie = cookieName + '=' + cookieValue + ';expires=' + oDate.toGMTString();
+}
+
+// 获取cookie值
+function getCookie(cookieName) { 
+    var arr1 = document.cookie.split(';');
+    for (let i = 0; i < arr1.length; i++) {
+        const arr2 = arr1[i].split('=');
+        if (arr2[0] == cookieName) {
+            return decodeURI(arr2[1]);
+        }
+    }
+}
+
+// task 6.1
+// 学习Ajax，并尝试自己封装一个Ajax方法
+function ajax(url, options) {
+    //创建对象
+    var xmlhttp;
+    if (window.XMLHttpRequest) {
+        xmlhttp = new XMLHttpRequest();
+    }
+    else {
+        //兼容 IE5 IE6
+        xmlhttp = new ActiveXObject('Microsoft.XMLHTTP');
+    }
+
+    //处理data
+    if (options.data) {
+        var dataarr = [];
+        for (const item in options.data) {
+            if (options.data.hasOwnProperty(item)) {
+                dataarr.push(item + '=' + encodeURI(options.data[item]));            
+            }
+            var data = dataarr.join('&');
+        }
+    }
+
+    //处理type
+    if (!options.type) {
+        options.type = options.type.toUperCase()
+    }
+
+    //发出请求
+    if (options.type == 'GET') {
+        var myURL = '';
+        if (options.data) {
+            myURL = url + '?' + data;
+        }
+        else {
+            myURL = url;
+        }
+        xmlhttp.open('GET',myURL,true);
+        xmlhttp.send(); 
+    }
+    else if (options.type === 'Post') {
+        xmlhttp.open('Post', url, true);
+        xmlhttp.setRequestHeader('Content-type', 'application/x-www-form-urlencoded');
+        xmlhttp.send(data);
+    }
+
+    //readyState
+    xmlhttp.onreadystatechange = function() {
+        if (xmlhttp.readyState == 4) {
+            if (xmlhttp.status === 200) {
+                if (options.onsuccess) {
+                    options.onsuccess(xmlhttp.responseText, xmlhttp.responseXML);
+                }
+            }
+            else {
+                if (options.onfail) {
+                    options.onfail();
+                }
+            }
+        }
+    }
+}
+
+// 使用示例：
+/*
+ajax(
+    'prompt.php',
+    {
+        data: {
+            q: 'a'
+        },
+        onsuccess: function (responseText, xhr) {
+            console.log(responseText);
+        },
+        onfail : function () {
+            console.log('fail');
+        }
+    }
+);
+*/
