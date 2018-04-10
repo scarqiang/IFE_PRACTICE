@@ -27,7 +27,7 @@ function inputHobby() {
         for (let i = 0; i < arr.length; i++) {
             var oInput = document.createElement('input');
             var oLable = document.createElement('lable');
-            oInputh.type = 'checkbox';
+            oInput.type = 'checkbox';
             oLable.innerHTML = arr[i];
             oLable.className = 'mylable';
             result.appendChild(oInput);
