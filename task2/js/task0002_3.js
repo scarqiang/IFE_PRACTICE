@@ -23,7 +23,7 @@ function animate(offset) {
     var speed = offset / (time / interval); // 每次位移量 
     
     function go() {
-        if (speed < 0 && parseInt(list.style.left) > newleft || (speed > 0 && parsetInt(list.style.left) < newleft )) {
+        if (speed < 0 && parseInt(list.style.left) > newleft || (speed > 0 && parseInt(list.style.left) < newleft )) {
             list.style.left = parseInt(list.style.left) + speed + 'px';
             setTimeout(go, interval);
         }
