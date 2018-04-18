@@ -111,7 +111,7 @@ function keydownLi() {
                 var nextLi = hightLightLi.nextSibling;
                 removeClass(hightLightLi, "active");
                 if (nextLi) {
-                    addClass(nextLi, "");
+                    addClass(nextLi, "active");
                 }
                 else {
                     addClass(firstLi, "active");

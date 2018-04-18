@@ -419,7 +419,7 @@ function init() {
 // 那是不是我们每次改变了DOM结构或者内容后，都需要重新绑定事件呢？
 //当然不会这么笨，接下来学习一下事件代理，然后实现下面新的方法。
 //事件代理
-function delegateEvent(elemet,tag,eventName,listener) {
+function delegateEvent(element,tag,eventName,listener) {
     addEvent(element,eventName, function (e) {
         var event = e || window.event;
         var target = event.target || event.srcElement;
