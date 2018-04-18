@@ -1,53 +1,150 @@
-/*实现一个倒计时功能。
-界面首先有一个文本输入框，允许按照特定的格式YYYY-MM-DD输入年月日；
-输入框旁有一个按钮，点击按钮后，计算当前距离输入的日期的00:00:00有多少时间差
-在页面中显示，距离YYYY年MM月DD日还有XX天XX小时XX分XX秒
-每一秒钟更新倒计时上显示的数
-如果时差为0，则倒计时停止*/
 
-var otext = document.getElementById('text');
-var obtn1 = document.getElementById('btn1');
-var obtn2 = document.getElementById('btn2');
-var oerror = document.getElementById('error');
-var result = document.getElementById('result');
+/*实现一个类似百度搜索框的输入提示的功能。
+要求如下：
+允许使用鼠标点击选中提示栏中的某个选项
+允许使用键盘上下键来选中提示栏中的某个选项，回车确认选中
+选中后，提示内容变更到输入框中
+初级班：
+不要求和后端交互，可以自己伪造一份提示数据例如：
+var suggestData = ['Simon', 'Erik', 'Kener'];
+中级班：
+自己搭建一个后端Server，使用Ajax来获取提示数据*/
 
-function showTime() {
-    var text = trim(otext.value);
-    var timearr = text.split('-');
-    if (timearr.length !== 3) {
-        oerror.innerHTML = '输入格式有误，请按照指定格式输入';
-        result.innerHTML = '';
-        return;
+var suggestData = ['哈哈哈', 'abandon', 'abdomen', 'abide', 'ability', 'able', 'abnormal', 'aboard', 'abolish', 'abound', 'about', 'above', 'fiction', 'field', 'fierce', 'fight', 'test2', 'test3'];
+var userInput = document.getElementById('userInput');
+var hintUl = document.getElementById('hintUl');
+
+addInputListenner();
+clickLi();
+keydownLi();
+
+//给input标签添加实时监听事件。onchange事件失去焦点后才会触发，在这里使用oninput及Onpropertychange事件
+function addInputListenner() {
+    if (userInput.addEventListener) {// all browsers except IE before version 9
+        userInput.addEventListener("input", OnInput);
+        userInput.addEventListener("blur", function () {
+            hintUl.style.display = "none";//隐藏提示列表
+        });        
     }
 
-    oerror.innerHTML = '';//删除之前的错误提示
-    var newYear = timearr[0];
-    var newMonth = timearr[1];
-    var newDay = timearr[2];
-    var iNew = new Date(newYear, newMonth - 1, newDay, 0, 0, 0);//代表月份的整数值从0（1月）到11（12月）。
-    var iNow = new Date();
-    var diff = (iNew - iNow) / 1000;
-    if (diff <= 0) {
-        oerror.innerHTML = '输入日期有误，请输入'
-        clearTimeout(timer);
-        result.innerHTML = '';
-        return;
+    if (userInput.attachEvent) {// Internet Explorer and Opera
+        userInput.attachEvent("onpropertychange", OnPropChanged);//Internet Explorer
     }
-    var diffDay = Math.floor(diff / (3600 * 24));
-    var diffHour = Math.floor(diff % (3600 * 24) / 3600);
-    var diffMin = Math.floor(diff % (3600 * 24) % 3600 / 60);
-    var diffSec = Math.floor(diff % 60);
-    var str = '距离' + newYear + '年' + newMonth + '月' + newDay + '日还有' + diffDay + '天' + diffHour + '时' + diffMin + '分' + diffSec + '秒';
-    result.innerHTML = str;
-    timer = setTimeout('showTime()', 1000);
 }
 
-function clearTime() {
-    clearTimeout(timer);
-    result.innerHTML = '';
-    otext.value = '';
-    oerror.innerHTML = '';
+// Firefox, Google Chrome, Opera, Safari from version 5, Internet Explorer from version 9
+function OnInput(event) {
+    var inputValue = event.target.value;
+    handleInput(inputValue);
 }
 
-obtn1.addEventListener('click', showTime);
-obtn2.addEventListener('click', clearTime);
+// Internet Explorer
+function OnPropChanged(event) {
+    var inputValue = "";
+    if (event.propertyName.toLowerCase() == "value") {
+        inputValue = event.srcElement.value;
+        handleInput(inputValue);
+    }
+}
+
+// 字符串处理函数，匹配用户输入的字符串，生成提示列表
+function handleInput(inputValue) {
+    //console.log(inputValue);
+    //发送ajax请求拉取提示数据
+    //注意去抖动，尤其中文输入时
+    var liString = "";
+    var pattern = new RegExp("^"+inputValue,"i");//获取开头形同的字符串
+
+    if (inputValue === "") {
+        hintUl.style.display = "none";
+    }
+    else {
+        for (let i = 0; i < suggestData.length; i++) {
+            if (suggestData[i].match(pattern)) {
+                // console.log(suggestData[i]);
+                liString += "<li><span>" + inputValue + "</span>" + suggestData[i].substr(inputValue.length) + "</li>";
+            }
+        }
+        hintUl.innerHTML = liString;
+        hintUl.style.display = "block";
+    }
+}
+
+//给提示列表里的所有li元素添加mouseover，mouseout，以及click事件
+function clickLi() {
+    delegateEvent(hintUl, "li", "mouseover", function() {//调用util.js中的delegateEvent函数（事件代理）
+        addClass(this, "active");
+    });
+
+    delegateEvent(hintUl, "li", "mouseout", function() {
+        removeClass(this, "active");
+    });
+
+    delegateEvent(hintUl, "li", "click", function() {
+        userInput.value = deleteSpan(this.innerHTML);//将候选项的值赋给input
+        hintUl.style.display = "none";//隐藏提示列表
+    })
+}
+
+/**
+ * 删除span标签，返回字符串
+ * @param  {String} string 带有span标签的字符串
+ * @return {String}        去掉span标签的字符串
+ */
+function deleteSpan(string) {
+    var pattern = /^<span>(\w+)<\/span>(\w+)$/;//正则\w不支持中文
+    var stringArr = string.match(pattern);
+    return stringArr[1] + stringArr[2];
+}
+
+// 给提示列表添加键盘事件
+function keydownLi() {
+    addEvent(userInput, "keydown", function(event) {//调用util.js中的addEvent函数
+        var hightLightLi = document.getElementsByClassName("active")[0];
+        var lis = hintUl.getElementsByTagName("li");
+        var firstLi = lis[0];
+        var lastLi = lis[lis.length - 1 ];
+
+        //down
+        if (event.keyCode == 40) {
+            if (hightLightLi) {
+                var nextLi = hightLightLi.nextSibling;
+                removeClass(hightLightLi, "active");
+                if (nextLi) {
+                    addClass(nextLi, "");
+                }
+                else {
+                    addClass(firstLi, "active");
+                }
+            }
+            else {
+                addClass(firstLi, "active");
+            }
+        }
+
+        //up
+        if (event.keyCode == 38) {
+            if (hightLightLi) {
+                var preLi = hightLightLi.previousSibling;
+                removeClass(hightLightLi, "active");
+                if (preLi) {
+                    addClass(preLi, "active");
+                }
+                else {
+                    addClass(lastLi, "active");
+                }
+            }
+            else {
+                addClass(firstLi, "active");
+            }
+        }
+
+        //enter
+        if (event.keyCode == 13) {
+            if (hightLightLi) {
+                userInput.value = deleteSpan(hightLightLi.innerHTML);
+                hintUl.style.display = "none";
+            }
+        }
+    })
+}
